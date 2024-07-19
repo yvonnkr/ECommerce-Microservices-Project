@@ -1,1 +1,1 @@
-# ECommerce App Built with Spring boot microservices
+# E-Commerce - Microservices App
