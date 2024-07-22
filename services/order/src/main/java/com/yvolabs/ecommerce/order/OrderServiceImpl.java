@@ -6,6 +6,8 @@ import com.yvolabs.ecommerce.kafka.OrderConfirmation;
 import com.yvolabs.ecommerce.kafka.OrderProducer;
 import com.yvolabs.ecommerce.orderline.OrderLineRequest;
 import com.yvolabs.ecommerce.orderline.OrderLineService;
+import com.yvolabs.ecommerce.payment.PaymentClient;
+import com.yvolabs.ecommerce.payment.PaymentRequest;
 import com.yvolabs.ecommerce.product.ProductClient;
 import com.yvolabs.ecommerce.product.PurchaseRequest;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,6 +29,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final CustomerClient customerClient;
     private final ProductClient productClient;
+    private final PaymentClient paymentClient;
     private final OrderRepository orderRepository;
     private final OrderLineService orderLineService;
     private final OrderProducer orderProducer;
@@ -39,24 +42,29 @@ public class OrderServiceImpl implements OrderService {
      *     <li>Purchase the Products --> product-ms  (using RestTemplate)</li>
      *     <li>Persist Order</li>
      *     <li>Persist Order-Lines</li>
-     *     <li>Start Payment process</li>
+     *     <li>Start Payment process --> payment-ms (using OpenFeign)</li>
      *     <li>Send the order confirmation to --> notification-ms (using kafka)</li>
      * </ol>
      */
     @Override
     public Integer createOrder(OrderRequest request) {
         //check customer exists --> customer-ms (using OpenFeign)
+        log.info("Fetching Customer...");
         var customer = this.customerClient
                 .findCustomerById(request.customerId())
                 .orElseThrow(() -> new BusinessException("Cannot place order:: No Customer exists with the provide ID: " + request.customerId()));
 
         //purchase the products --> product-ms (using RestTemplate)
-        var purchasedProducts = this.productClient.purchaseProducts(request.products());
+        log.info("Purchasing Products...");
+        var purchasedProducts = this.productClient
+                .purchaseProducts(request.products());
 
         //persist order
+        log.info("Persisting Order...");
         var order = this.orderRepository.save(mapper.toOrder(request));
 
         //persist order-lines
+        log.info("Persisting Order-Lines...");
         for (PurchaseRequest purchaseRequest : request.products()) {
             orderLineService.saveOrderLine(
                     new OrderLineRequest(
@@ -68,10 +76,19 @@ public class OrderServiceImpl implements OrderService {
             );
         }
 
-        //TODO: start payment process
-        log.info("TODO: Start Payment Process");
+        //start payment process --> payment-ms (using OpenFeign)
+        log.info("Processing Payment...");
+        var paymentRequest = new PaymentRequest(
+                request.amount(),
+                request.paymentMethod(),
+                order.getId(),
+                order.getReference(),
+                customer
+        );
+        this.paymentClient.requestOrderPayment(paymentRequest);
 
         //send the order confirmation to --> notification-ms (kafka)
+        log.info("Sending OrderConfirmation...");
         orderProducer.sendOrderConfirmation(
                 new OrderConfirmation(
                         request.reference(),
@@ -82,6 +99,7 @@ public class OrderServiceImpl implements OrderService {
                 )
         );
 
+        log.info("Create Order Complete...");
         return order.getId();
     }
 

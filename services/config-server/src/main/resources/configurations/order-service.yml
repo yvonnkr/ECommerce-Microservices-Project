@@ -8,7 +8,7 @@ spring:
     password: ${POSTGRES_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: validate
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
   kafka:
@@ -25,3 +25,7 @@ application:
     customer-url: http://localhost:8222/api/v1/customers
     payment-url: http://localhost:8222/api/v1/payments
     product-url: http://localhost:8222/api/v1/products
+    # actual service ports
+#    customer-url: http://localhost:8090/api/v1/customers
+#    payment-url: http://localhost:8060/api/v1/payments
+#    product-url: http://localhost:8050/api/v1/products
