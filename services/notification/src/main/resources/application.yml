@@ -1,0 +1,16 @@
+spring:
+  config:
+    import: optional:configserver:http://localhost:8888
+  application:
+    name: notification-service
+
+logging:
+  level:
+    org:
+      apache:
+        kafka: off
+
+#custom props
+api:
+  props:
+    host-email: ${SEND_EMAIL_ID}
