@@ -65,8 +65,8 @@ This application will serve to simplify my business processes and contribute sig
 - Save to the database
 - consume payment-queue and send email
 
-### Observability 
-- Distributed Tracing with Sleuth & Zipkin
+### Tracing & Observability 
+- Distributed Tracing and observabilty with Sleuth & Zipkin
 
 ### Distributed documentation
 - Expose services documentation through API Gateway
