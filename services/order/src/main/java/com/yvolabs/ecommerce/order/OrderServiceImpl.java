@@ -10,11 +10,13 @@ import com.yvolabs.ecommerce.payment.PaymentClient;
 import com.yvolabs.ecommerce.payment.PaymentRequest;
 import com.yvolabs.ecommerce.product.ProductClient;
 import com.yvolabs.ecommerce.product.PurchaseRequest;
+import com.yvolabs.ecommerce.product.PurchaseResponse;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -58,6 +60,7 @@ public class OrderServiceImpl implements OrderService {
         log.info("Purchasing Products...");
         var purchasedProducts = this.productClient
                 .purchaseProducts(request.products());
+        BigDecimal totalAmount = calculateTotalAmount(purchasedProducts);
 
         //persist order
         log.info("Persisting Order...");
@@ -79,7 +82,8 @@ public class OrderServiceImpl implements OrderService {
         //start payment process --> payment-ms (using OpenFeign)
         log.info("Processing Payment...");
         var paymentRequest = new PaymentRequest(
-                request.amount(),
+//                request.amount(),
+                totalAmount,
                 request.paymentMethod(),
                 order.getId(),
                 order.getReference(),
@@ -92,7 +96,8 @@ public class OrderServiceImpl implements OrderService {
         orderProducer.sendOrderConfirmation(
                 new OrderConfirmation(
                         request.reference(),
-                        request.amount(),
+//                        request.amount(),
+                        totalAmount,
                         request.paymentMethod(),
                         customer,
                         purchasedProducts
@@ -116,5 +121,15 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.findById(orderId)
                 .map(mapper::fromOrder)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found with ID: " + orderId));
+    }
+
+    private BigDecimal calculateTotalAmount(List<PurchaseResponse> purchaseResponses) {
+        double totalAmount = 0.00;
+
+        for (PurchaseResponse response : purchaseResponses) {
+            double responseTotalPrice = response.price().doubleValue() * response.quantity();
+            totalAmount += responseTotalPrice;
+        }
+        return BigDecimal.valueOf(totalAmount);
     }
 }
