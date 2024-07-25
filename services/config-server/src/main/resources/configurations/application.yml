@@ -1,3 +1,4 @@
+# All other application.yml extends this file. This config is shared in all ms
 eureka:
   instance:
     hostname: localhost
@@ -10,3 +11,9 @@ spring:
   cloud:
     config:
       override-system-properties: false
+
+# this config is shared among all ms, ensure zipkin dependency is added to all required ms
+management:
+  tracing:
+    sampling:
+      probability: 1.0 # 1.0 for testing purposes, reduce this value in prod
