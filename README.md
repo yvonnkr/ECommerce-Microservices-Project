@@ -30,6 +30,8 @@ This application will serve to simplify my business processes and contribute sig
 #### Database
     . MongoDB (NoSql)
     . Postgress (SQL)
+### Security
+    . Keycloak
 #### Misc
     . Docker Containers
     . OpenFeign
@@ -68,5 +70,8 @@ This application will serve to simplify my business processes and contribute sig
 ### Tracing & Observability 
 - Distributed Tracing and observabilty with Sleuth & Zipkin
 
+### Security - KeyCloak
+- Authentication & Authorisation using KeyCloak oath2 resource server
+- Set up keycloak on Api Gateway Level, to authenticate every request passing through the gateway
 ### Distributed documentation
 - Expose services documentation through API Gateway

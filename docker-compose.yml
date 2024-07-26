@@ -75,6 +75,19 @@ services:
     networks:
       - ecom-microservice-net
 
+  keycloak:
+    container_name: keycloak-ms
+    image: quay.io/keycloak/keycloak:24.0.2
+    ports:
+      - 9098:8080
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    networks:
+      - ecom-microservice-net
+    command:
+      - "start-dev"
+
 networks:
   ecom-microservice-net:
     driver: bridge
